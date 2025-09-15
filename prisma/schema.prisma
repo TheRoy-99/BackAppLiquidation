@@ -14,10 +14,10 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  phone     String?
-  password  String
-  createdAt DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  nombreCompleto String
+  email          String   @unique
+  telefono       String
+  password       String
+  createdAt      DateTime @default(now())
 }
