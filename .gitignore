@@ -1,0 +1,15 @@
+# Node
+node_modules/
+
+# Prisma
+prisma/dev.db
+
+# Env
+.env
+
+# Logs
+npm-debug.log
+yarn-error.log
+
+# Editor
+.vscode/
