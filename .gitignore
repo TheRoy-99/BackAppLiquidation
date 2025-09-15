@@ -13,3 +13,6 @@ yarn-error.log
 
 # Editor
 .vscode/
+
+# Archivos compilados de NestJS
+/dist
