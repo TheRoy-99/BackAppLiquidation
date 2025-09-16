@@ -7,7 +7,7 @@ export class UserRepository {
   constructor(private prisma: PrismaService) {}
 
   async create(data: {
-    name: string;
+    nombreCompleto: string;
     email: string;
     telefono: string;
     password: string;
@@ -18,4 +18,17 @@ export class UserRepository {
   async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { email } });
   }
+
+  async findAll() {
+  return this.prisma.user.findMany({
+    select: {
+      id: true,
+      nombreCompleto: true,
+      email: true,
+      telefono: true,
+      createdAt: true,
+    },
+  });
+}
+
 }

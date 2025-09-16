@@ -10,15 +10,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(name: string, email: string, telefono: string, password: string) {
+  async register(nombreCompleto: string, email: string, telefono: string, password: string) {
     const hashed = await bcrypt.hash(password, 10);
     const user = await this.userRepo.create({
-      name,
+      nombreCompleto,
       email,
       telefono,
       password: hashed,
     });
     return { id: user.id, email: user.email };
+  }
+
+  async getAllUsers() {
+    return this.userRepo.findAll();
   }
 
   async login(email: string, password: string) {
