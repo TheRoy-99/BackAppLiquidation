@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { RecoverDto } from './dto/recover.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -28,4 +30,15 @@ export class AuthController {
   async getUsers() {
     return this.authService.getAllUsers();
   }
+
+  @Post('recover')
+async recover(@Body() dto: RecoverDto) {
+  return this.authService.recoverPassword(dto.email);
+}
+
+@Post('reset-password')
+async resetPassword(@Body() dto: ResetPasswordDto) {
+  return this.authService.resetPassword(dto.token, dto.newPassword);
+}
+
 }

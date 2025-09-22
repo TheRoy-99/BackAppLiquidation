@@ -4,7 +4,7 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class UserRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(data: {
     nombreCompleto: string;
@@ -19,16 +19,25 @@ export class UserRepository {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
+  async updatePassword(id: number, newPassword: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { password: newPassword },
+    });
+  }
+
+
   async findAll() {
-  return this.prisma.user.findMany({
-    select: {
-      id: true,
-      nombreCompleto: true,
-      email: true,
-      telefono: true,
-      createdAt: true,
-    },
-  });
-}
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        nombreCompleto: true,
+        email: true,
+        telefono: true,
+        createdAt: true,
+      },
+    });
+
+  }
 
 }

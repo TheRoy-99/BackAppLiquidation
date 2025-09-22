@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class AuthService {
@@ -37,4 +38,54 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
+  async recoverPassword(email: string) {
+    const user = await this.userRepo.findByEmail(email);
+    if (!user) {
+      // No decimos "usuario no existe" para no filtrar correos
+      return { message: 'Si el correo existe, se enviará un link' };
+    }
+
+    const payload = { sub: user.id, email: user.email };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_RESET_SECRET || 'resetsecret123',
+      expiresIn: '15m',
+    });
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Recuperación de contraseña',
+      text: `Haz clic en este link para restablecer tu contraseña: ${resetLink}`,
+    });
+
+    return { message: 'Si el correo existe, se enviará un link' };
+  }
+
+  // 🔹 Paso 2. Validar token y resetear contraseña
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: process.env.JWT_RESET_SECRET || 'resetsecret123',
+      });
+
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await this.userRepo.updatePassword(payload.sub, hashed);
+
+      return { message: 'Contraseña actualizada correctamente' };
+    } catch {
+      return { message: 'Token inválido o expirado' };
+    }
+  }
+
+  
 }
