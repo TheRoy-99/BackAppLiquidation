@@ -3,6 +3,7 @@ import { UserRepository } from './user.repository';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -16,16 +17,16 @@ export class AuthService {
     email: string,
     telefono: string,
     password: string,
-    role?: string,
+    role: string = 'USER',
   ) {
-    const finalRole = role && role === 'ADMIN' ? 'USER' : 'USER';
+    //Siempre guarda en mayúsculas, pero solo el ADMIN puede crear otros usuarios
     const hashed = await bcrypt.hash(password, 10);
     const user = await this.userRepo.create({
       nombreCompleto,
       email,
       telefono,
       password: hashed,
-      role: finalRole,
+      role: role ? (role.toUpperCase() as Role) : Role.USER, // se guarda como 'ADMIN' o 'USER'
     });
     return { id: user.id, email: user.email, role: user.role };
   }
