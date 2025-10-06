@@ -9,17 +9,25 @@ export class AuthService {
   constructor(
     private userRepo: UserRepository,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
-  async register(nombreCompleto: string, email: string, telefono: string, password: string) {
+  async register(
+    nombreCompleto: string,
+    email: string,
+    telefono: string,
+    password: string,
+    role?: string,
+  ) {
+    const finalRole = role && role === 'ADMIN' ? 'USER' : 'USER';
     const hashed = await bcrypt.hash(password, 10);
     const user = await this.userRepo.create({
       nombreCompleto,
       email,
       telefono,
       password: hashed,
+      role: finalRole,
     });
-    return { id: user.id, email: user.email };
+    return { id: user.id, email: user.email, role: user.role };
   }
 
   async getAllUsers() {
@@ -33,7 +41,7 @@ export class AuthService {
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new UnauthorizedException('Credenciales inválidas');
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: user.email, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
     };
@@ -71,7 +79,7 @@ export class AuthService {
     return { message: 'Si el correo existe, se enviará un link' };
   }
 
-  // 🔹 Paso 2. Validar token y resetear contraseña
+  // Paso 2. Validar token y resetear contraseña
   async resetPassword(token: string, newPassword: string) {
     try {
       const payload = this.jwtService.verify(token, {
@@ -83,9 +91,9 @@ export class AuthService {
 
       return { message: 'Contraseña actualizada correctamente' };
     } catch {
-      return { message: 'Token inválido o expirado' };
+      throw new UnauthorizedException('Token inválido o expirado');
     }
   }
 
-  
+
 }
