@@ -12,7 +12,10 @@ export class RolesGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const user = request.user;
 
-        if (!roles.includes(user.role)) {
+        //Normalizamos el rol por si llega en minúsculas
+        const userRole = user?.role?.toUpperCase();
+
+        if (!roles.includes(userRole)) {
             throw new ForbiddenException('No tienes permisos para acceder a este recurso');
         }
 

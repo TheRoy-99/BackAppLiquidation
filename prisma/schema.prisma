@@ -21,9 +21,28 @@ model User {
   password       String
   role           Role     @default(USER)
   createdAt      DateTime @default(now())
+  recibos        Receipt[]
 }
 
 enum Role {
   ADMIN
   USER
+}
+
+model Receipt {
+  id           Int           @id @default(autoincrement())
+  servicio     String
+  mes          String
+  monto        Float
+  estado       EstadoRecibo  @default(PENDIENTE)
+  fechaSubida  DateTime      @default(now())
+  archivoUrl   String
+  usuarioId    Int
+  usuario      User          @relation(fields: [usuarioId], references: [id])
+}
+
+enum EstadoRecibo {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
 }
