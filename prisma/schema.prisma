@@ -1,44 +1,61 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id             Int      @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
   nombreCompleto String
-  email          String   @unique
+  email          String        @unique
   telefono       String
   password       String
-  role           Role     @default(USER)
-  createdAt      DateTime @default(now())
+  role           Role          @default(USER)
+  createdAt      DateTime      @default(now())
+  auditorias     Auditoria[]
+  aprobaciones   Liquidacion[] @relation("AprobadoPor")
   recibos        Receipt[]
+}
+
+model Receipt {
+  id          Int          @id @default(autoincrement())
+  servicio    String
+  mes         String
+  monto       Float
+  estado      EstadoRecibo @default(PENDIENTE)
+  fechaSubida DateTime     @default(now())
+  archivoUrl  String
+  usuarioId   Int
+  liquidacion Liquidacion?
+  usuario     User         @relation(fields: [usuarioId], references: [id])
+}
+
+model Liquidacion {
+  id            Int      @id @default(autoincrement())
+  reciboId      Int      @unique
+  fecha         DateTime @default(now())
+  valorSubsidio Float
+  valorTotal    Float
+  aprobadoPorId Int
+  aprobadoPor   User     @relation("AprobadoPor", fields: [aprobadoPorId], references: [id])
+  recibo        Receipt  @relation(fields: [reciboId], references: [id])
+}
+
+model Auditoria {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  accion    String
+  fecha     DateTime @default(now())
+  detalles  String?
+  usuario   User     @relation(fields: [usuarioId], references: [id])
 }
 
 enum Role {
   ADMIN
   USER
-}
-
-model Receipt {
-  id           Int           @id @default(autoincrement())
-  servicio     String
-  mes          String
-  monto        Float
-  estado       EstadoRecibo  @default(PENDIENTE)
-  fechaSubida  DateTime      @default(now())
-  archivoUrl   String
-  usuarioId    Int
-  usuario      User          @relation(fields: [usuarioId], references: [id])
 }
 
 enum EstadoRecibo {

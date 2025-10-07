@@ -52,14 +52,55 @@ export class ReceiptsService {
     }
 
     //Actualizar estado (ADMIN)
-    async updateReceiptStatus(id: number, estado: string) {
+    async updateReceiptStatus(id: number, estado: string, adminId: number) {
         const receipt = await this.prisma.receipt.findUnique({ where: { id } });
         if (!receipt) throw new NotFoundException('Recibo no encontrado');
 
+        // Actualizar estado del recibo
         const updated = await this.prisma.receipt.update({
             where: { id },
             data: { estado: estado as EstadoRecibo },
         });
+
+        // Si fue aprobado, crear una liquidación
+        if (estado === 'APROBADO') {
+            let porcentaje = 0;
+            if (receipt.servicio.toLowerCase().includes('agua')) porcentaje = 0.1;
+            else if (receipt.servicio.toLowerCase().includes('energ')) porcentaje = 0.15;
+
+            const valorSubsidio = receipt.monto * porcentaje;
+            const valorTotal = receipt.monto - valorSubsidio;
+
+            // Crear la liquidación
+            await this.prisma.liquidacion.create({
+                data: {
+                    reciboId: receipt.id,
+                    valorSubsidio,
+                    valorTotal,
+                    aprobadoPorId: adminId, // ← ahora siempre es number
+                },
+            });
+
+            // Registrar auditoría
+            await this.prisma.auditoria.create({
+                data: {
+                    usuarioId: adminId,
+                    accion: 'APROBAR_RECIBO',
+                    detalles: `Recibo #${receipt.id} aprobado. Subsidio ${porcentaje * 100}%.`,
+                },
+            });
+        }
+
+        // Si fue rechazado, registrar auditoría
+        if (estado === 'RECHAZADO') {
+            await this.prisma.auditoria.create({
+                data: {
+                    usuarioId: adminId,
+                    accion: 'RECHAZAR_RECIBO',
+                    detalles: `Recibo #${receipt.id} rechazado.`,
+                },
+            });
+        }
 
         return { message: `Recibo ${estado.toLowerCase()} correctamente`, receipt: updated };
     }

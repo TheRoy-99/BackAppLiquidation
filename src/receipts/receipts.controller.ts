@@ -60,8 +60,10 @@ export class ReceiptsController {
     async updateReceiptStatus(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateReceiptDto,
+        @Req() req: any,
     ) {
-        return this.receiptsService.updateReceiptStatus(id, dto.estado);
+        const adminId = req.user.userId; // viene del token JWT
+        return this.receiptsService.updateReceiptStatus(id, dto.estado, adminId);
     }
 
     // Ver todos los recibos (solo ADMIN)
