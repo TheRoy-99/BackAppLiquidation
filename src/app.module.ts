@@ -5,13 +5,17 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ReceiptsModule } from './receipts/receipts.module';
 import { ConfigModule } from '@nestjs/config';
+import { LiquidacionesModule } from './liquidations/liquidaciones.module';
+import { ReportesModule } from './reports/reportes.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule, 
     UsersModule,
-    ReceiptsModule],
+    ReceiptsModule,
+    LiquidacionesModule,
+    ReportesModule],
   controllers: [AppController],
   providers: [AppService],
 })
