@@ -4,10 +4,15 @@ import { v2 as cloudinary } from 'cloudinary';
 import toStream = require('buffer-to-stream');
 import { EstadoRecibo } from '@prisma/client';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
+import { AuditoriasService } from '../audit/auditorias.service';
+import { CreateAuditoriaDto } from '../audit/dto/create-auditoria.dto';
 
 @Injectable()
 export class ReceiptsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private auditoriasService: AuditoriasService, //servicio inyectado
+    ) { }
 
     //Eliminar un recibo (solo ADMIN)
     async deleteReceipt(id: number) {
@@ -19,7 +24,11 @@ export class ReceiptsService {
     }
 
     //Subir recibo
-    async uploadReceipt(file: Express.Multer.File, userId: number, dto: CreateReceiptDto) {
+    async uploadReceipt(
+        file: Express.Multer.File,
+        userId: number,
+        dto: CreateReceiptDto,
+    ) {
         const uploadResult = await new Promise((resolve, reject) => {
             const upload = cloudinary.uploader.upload_stream(
                 { folder: 'recibos', resource_type: 'auto' },
@@ -51,18 +60,18 @@ export class ReceiptsService {
         });
     }
 
-    //Actualizar estado (ADMIN)
+    //Actualizar estado (solo ADMIN)
     async updateReceiptStatus(id: number, estado: string, adminId: number) {
         const receipt = await this.prisma.receipt.findUnique({ where: { id } });
         if (!receipt) throw new NotFoundException('Recibo no encontrado');
 
-        // Actualizar estado del recibo
+        // 1️⃣ Actualizar estado del recibo
         const updated = await this.prisma.receipt.update({
             where: { id },
             data: { estado: estado as EstadoRecibo },
         });
 
-        // Si fue aprobado, crear una liquidación
+        //Si fue aprobado, crear una liquidación
         if (estado === 'APROBADO') {
             let porcentaje = 0;
             if (receipt.servicio.toLowerCase().includes('agua')) porcentaje = 0.1;
@@ -71,35 +80,32 @@ export class ReceiptsService {
             const valorSubsidio = receipt.monto * porcentaje;
             const valorTotal = receipt.monto - valorSubsidio;
 
-            // Crear la liquidación
             await this.prisma.liquidacion.create({
                 data: {
                     reciboId: receipt.id,
                     valorSubsidio,
                     valorTotal,
-                    aprobadoPorId: adminId, // ← ahora siempre es number
+                    aprobadoPorId: adminId,
                 },
             });
 
-            // Registrar auditoría
-            await this.prisma.auditoria.create({
-                data: {
-                    usuarioId: adminId,
-                    accion: 'APROBAR_RECIBO',
-                    detalles: `Recibo #${receipt.id} aprobado. Subsidio ${porcentaje * 100}%.`,
-                },
-            });
+            //Registrar auditoría automática
+            const dto = new CreateAuditoriaDto();
+            dto.usuarioId = adminId;
+            dto.accion = 'APROBAR_RECIBO';
+            dto.detalles = `Recibo #${receipt.id} aprobado. Subsidio ${porcentaje * 100}%.`;
+
+            await this.auditoriasService.create(dto);
         }
 
-        // Si fue rechazado, registrar auditoría
+        //Si fue rechazado, registrar auditoría
         if (estado === 'RECHAZADO') {
-            await this.prisma.auditoria.create({
-                data: {
-                    usuarioId: adminId,
-                    accion: 'RECHAZAR_RECIBO',
-                    detalles: `Recibo #${receipt.id} rechazado.`,
-                },
-            });
+            const dto = new CreateAuditoriaDto();
+            dto.usuarioId = adminId;
+            dto.accion = 'RECHAZAR_RECIBO';
+            dto.detalles = `Recibo #${receipt.id} rechazado.`;
+
+            await this.auditoriasService.create(dto);
         }
 
         return { message: `Recibo ${estado.toLowerCase()} correctamente`, receipt: updated };

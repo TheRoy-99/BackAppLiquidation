@@ -7,6 +7,7 @@ import { ReceiptsModule } from './receipts/receipts.module';
 import { ConfigModule } from '@nestjs/config';
 import { LiquidacionesModule } from './liquidations/liquidaciones.module';
 import { ReportesModule } from './reports/reportes.module';
+import { AuditoriasModule } from './audit/auditorias.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { ReportesModule } from './reports/reportes.module';
     UsersModule,
     ReceiptsModule,
     LiquidacionesModule,
-    ReportesModule],
+    ReportesModule,
+    AuditoriasModule],
   controllers: [AppController],
   providers: [AppService],
 })
