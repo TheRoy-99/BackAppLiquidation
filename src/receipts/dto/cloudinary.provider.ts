@@ -1,5 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { ConfigService } from '@nestjs/config';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import multer from 'multer';
 
 export const CloudinaryProvider = {
     provide: 'Cloudinary',
@@ -13,3 +15,4 @@ export const CloudinaryProvider = {
     },
     inject: [ConfigService],
 };
+export default cloudinary;
