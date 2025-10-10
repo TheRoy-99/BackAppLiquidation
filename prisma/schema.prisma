@@ -28,6 +28,7 @@ model Receipt {
   estado      EstadoRecibo @default(PENDIENTE)
   fechaSubida DateTime     @default(now())
   archivoUrl  String
+  archivoPublicId String? 
   usuarioId   Int
   liquidacion Liquidacion?
   usuario     User         @relation(fields: [usuarioId], references: [id])

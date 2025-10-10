@@ -14,7 +14,7 @@ export type UserSafe = {
 
 @Injectable()
 export class UserRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Crear usuario (devuelve UserSafe)
   async create(data: {
@@ -83,18 +83,17 @@ export class UserRepository {
 
   // Buscar usuario por ID (sin password)
   async findById(id: number): Promise<UserSafe | null> {
-    return this.prisma.user
-      .findUnique({
-        where: { id },
-        select: {
-          id: true,
-          nombreCompleto: true,
-          email: true,
-          telefono: true,
-          role: true,
-          createdAt: true,
-        },
-      }) as Promise<UserSafe | null>;
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nombreCompleto: true,
+        email: true,
+        telefono: true,
+        role: true,
+        createdAt: true,
+      },
+    }) as Promise<UserSafe | null>;
   }
 
   // Actualizar datos (devuelve UserSafe)

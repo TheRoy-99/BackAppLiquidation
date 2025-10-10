@@ -16,7 +16,7 @@ export class UsersController {
         return this.usersService.createUser(data);
     }
 
-    @Get()
+    @Get('all')
     @Roles('ADMIN')
     async getAll() {
         return this.usersService.getAllUsers();
