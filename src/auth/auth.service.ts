@@ -42,11 +42,22 @@ export class AuthService {
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new UnauthorizedException('Credenciales inválidas');
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
-    return {
-      access_token: this.jwtService.sign(payload),
+    // 🔧 Asegura que el payload incluya el ID
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      nombreCompleto: user.nombreCompleto,
     };
+
+    const token = this.jwtService.sign(payload);
+
+    // 👇 útil para depurar temporalmente
+    console.log("Payload del token generado:", payload);
+
+    return { access_token: token };
   }
+
   async recoverPassword(email: string) {
     const user = await this.userRepo.findByEmail(email);
     if (!user) {

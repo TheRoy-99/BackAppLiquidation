@@ -74,5 +74,14 @@ export class ReceiptsController {
         return this.receiptsService.getAllReceipts();
     }
 
-
+    // 🔧 TEMPORAL: Corregir permisos de archivos existentes en Cloudinary
+    // Este endpoint cambia los archivos de privados a públicos
+    // Ejecutar UNA VEZ después de actualizar el servicio
+    // Luego se puede comentar o eliminar
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('ADMIN')
+    @Get('fix-access-mode')
+    async fixAccessMode() {
+        return this.receiptsService.fixFileAccessMode();
+    }
 }
