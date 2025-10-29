@@ -200,7 +200,7 @@ export class ReceiptsService {
                 await this.prisma.liquidacion.delete({ where: { reciboId: id } });
             }
 
-            // 🔹 Tabla de subsidios configurables
+            //Tabla de subsidios configurables
             const subsidios: Record<string, number> = {
                 agua: 0.10,     // 10%
                 energia: 0.15,  // 15%
